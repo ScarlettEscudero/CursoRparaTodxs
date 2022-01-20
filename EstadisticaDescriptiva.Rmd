@@ -1,0 +1,188 @@
+---
+title: "Estadística Descriptiva"
+author: "Scarlett Escudero y Ramsés Vázquez Lira"
+date: "1/19/2022 - 1/20/2022"
+output: html_document
+---
+
+## 6.1. Estadística descriptiva
+
+6.1.3. Medidas de frecuencia
+
+La estadística descriptiva se ocupa de métricas, herramientas y estrategias que se pueden utilizar para resumir un conjunto de datos. Estas métricas se extraen de los datos y brindan información sobre la ubicación, dispersión, indicadores de forma, etc.
+
+### 6.1.1. Medidas de tendencia central
+
+La media, mediana y moda entran en esta categoría.
+
+```{r}
+iris #Base de datos de iris
+
+mean(iris$Sepal.Length)
+median(iris$Sepal.Length)
+
+mode <- function(x){
+  value <- x[which.max(tabulate(x))]
+  print(value)
+}
+mode(iris$Sepal.Length)
+```
+
+### 6.1.2. Medidas de dispersión
+
+El patrón de los valores alrededor del centro se llama dispersión o variabilidad. Algunas medidas de dispersión son: rango, varianza, desviación estándar, rango intercuartil.
+
+```{r}
+range(iris$Sepal.Length)
+min(iris$Sepal.Length)
+max(iris$Sepal.Length)
+sd(iris$Sepal.Length)
+var(iris$Sepal.Length)
+IQR(iris$Sepal.Length)
+```
+
+### 6.1.3. Indicadores de forma
+
+La asimetría es una medida de simetría, o más precisamente, la falta de simetría. Una distribución, o conjunto de datos, es simétrico si se ve igual a la izquierda y a la derecha del punto central.
+
+La curtosis es una medida de si los datos son de cola pesada o de cola ligera en relación con una distribución normal. Es decir, los conjuntos de datos con alta curtosis tienden a tener colas pesadas o valores atípicos. Los conjuntos de datos con baja curtosis tienden a tener colas ligeras o falta de valores atípicos.
+
+```{r}
+#install.packages("moments")
+library(moments)
+skewness(iris$Sepal.Length)
+kurtosis(iris$Sepal.Length)
+```
+
+
+Existen algunas funciones que resumen en un solo comando todo lo que acabamos de calcular:
+´summary()´
+´describe()´
+
+```{r}
+summary(iris)
+
+#install.packages("psych")
+library(psych)
+describe(iris)
+```
+
+*Nota: En este curso no veremos estadística inferencial*
+
+#### Ejercicio 1
+1. Obtén las medidas de tendencia central y de dispersión generales de los datos de CalifMate.csv
+2. Agrupa por sexo y obtén las medidas de tendencia central y de dispersión de CI, Motivación y Calificació de matemáticas separados por sexo
+```{r}
+summary(datos_mate)
+
+#by(datos_mate, datos_mate$Sexo, summary)
+```
+
+
+## 6.2. Plots usando R base
+También podemos crear gráficos muy sencillos con r-base.
+
+#### Scatterplot
+```{r}
+
+plot(datos_mate$CI)
+plot(datos_mate$CI, datos_mate$CalificaciónMat)
+
+
+plot(datos_mate$CalificaciónMat,datos_mate$CI, col="red", xlab = "CI", ylab = "Calificación de matemáticas", main = "Relación entre Calificación y CI")
+abline(datos_mate$CI, datos_mate$CalificaciónMat, col = "blue")
+
+
+```
+#### Boxplot
+```{r}
+boxplot(datos_mate$CI)
+boxplot(datos_mate$CI ~ datos_mate$Sexo, xlab = "Sexo", ylab = "CI", main ="Boxplot de CI dividido por sexo")
+boxplot(datos_mate$Motivación ~ datos_mate$Sexo, xlab = "Sexo", ylab = "Nivel de motivación", main ="Boxplot de motivación dividido por sexo")
+boxplot(datos_mate$CalificaciónMat ~ datos_mate$Sexo, xlab = "Sexo", ylab = "Calificación de matemáticas", main ="Boxplot de calificación dividido por sexo", col="pink", horizontal = TRUE)
+
+```
+
+#### Histograma
+```{r}
+hist(datos_mate$CI, main="Histograma de CI", prob=T)
+lines(density(datos_mate$CI), col = 'red')
+
+hist(datos_mate$Motivación, main="Histograma de Motivación")
+
+hist(datos_mate$CalificaciónMat, main="Histograma de Calificación", col="lightblue", prob=T)
+lines(density(datos_mate$CalificaciónMat), col = 'red')
+
+```
+
+#### Barplot
+```{r}
+conteo <- table(datos_mate$Sexo)
+conteo2 <- table(datos_mate$Sexo,datos_mate$CalificaciónMat)
+barplot(conteo, main = "Sexo de los estudiantes")
+
+barplot(conteo2, col = c("royalblue", "lightblue"), beside=T, main="Calificación de acuerdo a su sexo")
+legend(x = "topright", legend = c("Hombre", "Mujer"), fill = c("royalblue", "lightblue"), 
+       title = "Sexo")
+```
+
+
+#### Plots de normalidad
+```{r}
+qqnorm(datos_mate$CI) #Quantile-quantile plot
+qqline(datos_mate$CI)
+
+```
+
+### 6.3. Gráficos con ggplot2
+
+ggplot2 es un paquete R para producir gráficos estadísticos o de datos. A diferencia de la mayoría de los otros paquetes de gráficos, ggplot2 tiene una gramática subyacente, basada en Grammar of Graphics que le permite componer gráficos combinando componentes independientes. En lugar de limitarse a conjuntos de gráficos predefinidos, puede crear gráficos novedosos que se adapten a su problema específico.
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+```
+
+```{r}
+ggplot(datos_mate) +
+  aes(x = Sexo, y = CI) +
+  geom_boxplot(fill = "#AD5481") +
+  geom_jitter() +
+  labs(
+    x = "Sexo",
+    y = "CI",
+    title = "Dispersión del CI por sexo"
+  ) +
+  theme_minimal() +
+  ylim(70, 200)
+```
+```{r}
+ggplot(datos_mate) +
+  aes(x = CalificaciónMat, y = CI , colour = Sexo) +
+  geom_jitter(size = 2) +
+  geom_smooth(method = "lm", se = F)  +
+  scale_color_manual(values = c(H = "#4244E7", M = "#FF61C3")) +
+  labs(
+    x = "Calificación",
+    y = "CI",
+    title = "Relación CI-Calificación de acuerdo al sexo",
+    color = "Sexo"
+  ) +
+  theme_classic()
+```
+
+
+
+Existe un add-in que se puede descargar llamado ´esquisse´ que te permite crear desde cero gráficos en ggplot con una interfaz muy amigable y al final les genera automáticamente el código. Es muy útil para cuando tienen prisa para crear gráficos o cuando apenas están empezando para agarrarle la onda a ggplot.
+
+Aquí algunos recursos para aprender ggplot:
+https://ggplot2-book.org/index.html
+https://cengel.github.io/R-data-viz/
+
+También se pueden crear gráficos interactivos con Plotly y Shiny.
+
+
+
+### Extra: R markdown
+RMarkdown es un procesador de texto que ofrece además la posibilidad de incluir trozos de código desde R. El principal beneficio de esta herramienta es que permite trabajar en un solo documento tanto la redacción del contenido narrativo de reportes de investigación, como también la construcción y presentación formal de resultados de análisis estadísticos.
+
+https://bookdown.org/yihui/rmarkdown/
